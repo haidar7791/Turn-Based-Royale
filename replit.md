@@ -1,36 +1,48 @@
-# [Project name]
+# بتموس — Battle Royale
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A 3D browser-based Battle Royale game (100-player, PUBG-style) built with Three.js + React. Features a shrinking zone, multiple weapons, bots, terrain generation, and squads.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/batmos-game run dev` — run the game frontend (Vite, reads `PORT` env var)
+- `pnpm --filter @workspace/api-server run dev` — run the API server (Express 5, reads `PORT` env var)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- `pnpm --filter @workspace/db run push` — push DB schema changes to dev database (Drizzle)
+- Required env: `DATABASE_URL` — auto-provisioned by Replit (do not set manually)
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
+- Game: React + Vite + Three.js (3D rendering), simplex-noise (terrain)
+- UI: Tailwind CSS v4, shadcn/ui components, Radix UI
 - API: Express 5
-- DB: PostgreSQL + Drizzle ORM
+- DB: PostgreSQL + Drizzle ORM (`lib/db`)
 - Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
+- API codegen: Orval (from `lib/api-spec/openapi.yaml`)
 - Build: esbuild (CJS bundle)
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/batmos-game/src/BatmosGame.tsx` — all game logic and 3D rendering (Three.js)
+- `artifacts/batmos-game/src/Game.tsx` — game component wrapper
+- `artifacts/api-server/src/` — Express app, routes, middlewares
+- `lib/db/src/schema/` — Drizzle table definitions (source of truth for DB schema)
+- `lib/api-spec/openapi.yaml` — OpenAPI spec (source of truth for API contracts)
+- `lib/api-client-react/` — generated React Query hooks (from Orval codegen)
+- `lib/api-zod/` — generated Zod schemas (from Orval codegen)
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- The game is entirely client-side (Three.js); the API server is for future leaderboards/auth/persistence.
+- DB schema is currently empty — no tables defined yet. The API only exposes `/api/healthz`.
+- `DATABASE_URL` is runtime-managed by Replit — never set it manually as a secret or env var.
+- The game requires WebGL 2; the app shows a graceful Arabic error message when WebGL is unavailable.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+A 100-player Battle Royale: parachute onto a procedurally generated 3D map, loot weapons (AK-47, M416, AWM, UZI, Shotgun), fight 99 bots, survive the shrinking zone, be the last one standing.
 
 ## User preferences
 
@@ -38,7 +50,9 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- After any DB schema change in `lib/db/src/schema/`, run `pnpm --filter @workspace/db run push` to apply it to the dev database.
+- After any OpenAPI spec change in `lib/api-spec/openapi.yaml`, run codegen to regenerate hooks/schemas.
+- The game `CONFIG` object at the top of `BatmosGame.tsx` controls all tunable game parameters.
 
 ## Pointers
 
