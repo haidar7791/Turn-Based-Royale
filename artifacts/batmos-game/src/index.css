@@ -270,6 +270,115 @@ canvas#game-canvas {
 }
 
 /* ═══════════════════════════════════════════
+   CAMERA DRAG ZONE
+═══════════════════════════════════════════ */
+.cam-drag-zone {
+  position: absolute; inset: 0;
+  z-index: 5;
+  pointer-events: all;
+  touch-action: none;
+}
+
+/* ═══════════════════════════════════════════
+   VIRTUAL JOYSTICK
+═══════════════════════════════════════════ */
+.joystick-zone {
+  position: absolute;
+  bottom: 28px; left: 20px;
+  z-index: 30;
+  pointer-events: all;
+  touch-action: none;
+}
+.joystick-base {
+  width: 104px; height: 104px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.10);
+  border: 2px solid rgba(255,255,255,0.28);
+  box-shadow: 0 0 18px rgba(0,0,0,0.5);
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+.joystick-knob {
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 35%, rgba(255,255,255,0.55), rgba(255,255,255,0.25));
+  border: 2px solid rgba(255,255,255,0.65);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  position: absolute;
+  pointer-events: none;
+  transition: transform 0.04s linear;
+}
+
+/* ═══════════════════════════════════════════
+   ACTION BUTTONS
+═══════════════════════════════════════════ */
+.action-buttons {
+  position: absolute;
+  bottom: 28px; right: 14px;
+  z-index: 30;
+  display: flex; flex-direction: column; gap: 10px;
+  pointer-events: all;
+}
+.action-btn {
+  width: 58px; height: 58px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.30);
+  background: rgba(0,0,0,0.50);
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 1px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: background 0.1s, transform 0.08s;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+  -webkit-tap-highlight-color: transparent;
+}
+.action-btn span:last-child { font-size: 9px; opacity: 0.85; }
+.action-btn:active { transform: scale(0.92); }
+
+.btn-sprint { border-color: rgba(255,200,60,0.65); }
+.btn-sprint.active { background: rgba(220,140,0,0.60); border-color: #ffcc00; box-shadow: 0 0 12px rgba(255,200,0,0.5); }
+.btn-jump    { border-color: rgba(100,190,255,0.65); }
+.btn-interact { border-color: rgba(80,220,120,0.65); }
+.btn-quest   { border-color: rgba(200,200,220,0.40); font-size: 16px; }
+
+/* ═══════════════════════════════════════════
+   MINI COMPASS
+═══════════════════════════════════════════ */
+.mini-compass {
+  position: absolute;
+  top: 110px; right: 14px;
+  width: 74px; height: 74px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.52);
+  border: 1.5px solid rgba(255,255,255,0.22);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.6);
+  pointer-events: none;
+  z-index: 20;
+}
+.compass-center-dot {
+  position: absolute; top:50%; left:50%;
+  transform: translate(-50%,-50%);
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.8);
+}
+.compass-label-top {
+  position: absolute; top: 4px; left: 50%; transform: translateX(-50%);
+  font-size: 9px; color: rgba(255,100,100,0.9); font-weight: bold; line-height: 1;
+}
+.compass-indicator {
+  position: absolute;
+  font-size: 13px; line-height: 1;
+  transform: translate(-50%, -50%);
+}
+
+/* ═══════════════════════════════════════════
    QUEST PANEL (toggle with Q)
 ═══════════════════════════════════════════ */
 .quest-panel {
