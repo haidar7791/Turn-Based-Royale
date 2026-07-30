@@ -324,11 +324,12 @@ export default function Game() {
       });
       
       if (target) {
-        const dmg = Math.min(target!.shield, wDamage);
-        target!.shield -= dmg;
-        target!.health -= (wDamage - dmg);
-        addLog(`أطلقت النار على العدو ${target!.id.replace('AI-', '')} وأصبت بـ ${wDamage} ضرر!`);
-        if (target!.health <= 0) target!.alive = false;
+        const t = target as Player;
+        const dmg = Math.min(t.shield, wDamage);
+        t.shield -= dmg;
+        t.health -= (wDamage - dmg);
+        addLog(`أطلقت النار على العدو ${t.id.replace('AI-', '')} وأصبت بـ ${wDamage} ضرر!`);
+        if (t.health <= 0) t.alive = false;
       } else {
         addLog("لا يوجد عدو في مدى السلاح!");
       }

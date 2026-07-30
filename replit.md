@@ -39,6 +39,10 @@ A 3D browser-based Battle Royale game (100-player, PUBG-style) built with Three.
 - DB schema is currently empty — no tables defined yet. The API only exposes `/api/healthz`.
 - `DATABASE_URL` is runtime-managed by Replit — never set it manually as a secret or env var.
 - The game requires WebGL 2; the app shows a graceful Arabic error message when WebGL is unavailable.
+- Shadows use PCFSoft shadow map at 2048×2048 on the directional sun light only (performance balance).
+- Bot mesh children are positionally ordered: [0]=legL, [1]=legR, [2]=bootL, [3]=bootR, [4]=belt, [5]=torso, [6]=armL, [7]=armR — animation code relies on these indices.
+- Cover points are generated at each building corner (+1.2m offset) and marked with `occupiedBy: botId`.
+- Building AABBs are stored for both player push-out collision and bot pathfinding deflection.
 
 ## Product
 
