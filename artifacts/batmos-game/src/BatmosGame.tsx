@@ -3,21 +3,19 @@ import * as THREE from 'three';
 import { createNoise2D } from 'simplex-noise';
 
 // ══════════════════════════════════════════════════════════
-//  ANIMAL DEFINITIONS  (camDist/camHeight for 3rd-person)
+//  PLAYABLE CHARACTERS AND ANIMALS
 // ══════════════════════════════════════════════════════════
 const ANIMALS = {
-  deer:    { nameAr:'غزال',   nameEn:'Deer',    icon:'🦌', eyeH:1.0,  speed:7,  runSpeed:14, diet:'herb', bodyHex:0xc8a060, desc:'عاشب سريع، تهرب من المفترسين',        predatedBy:['leopard','lion','tiger','bear'],          camDist:5,  camHeight:2.5 },
-  rabbit:  { nameAr:'أرنب',  nameEn:'Rabbit',  icon:'🐇', eyeH:0.35, speed:9,  runSpeed:18, diet:'herb', bodyHex:0xd4c09a, desc:'صغير وسريع جداً، خطر دائم يحدق به',   predatedBy:['leopard','eagle','lion','tiger','bear'],  camDist:3,  camHeight:1.5 },
-  giraffe: { nameAr:'زرافة', nameEn:'Giraffe', icon:'🦒', eyeH:4.5,  speed:5,  runSpeed:9,  diet:'herb', bodyHex:0xe8c040, desc:'طويل القامة، يرى بعيداً، ندرة الأعداء', predatedBy:['lion'],                                   camDist:11, camHeight:7   },
-  falcon:  { nameAr:'صقر',   nameEn:'Falcon',  icon:'🦅', eyeH:0.7,  speed:9,  runSpeed:20, diet:'carn', bodyHex:0x7a5030, desc:'طير صياد سريع، يصطاد فرائس صغيرة',     predatedBy:['eagle'],                                  camDist:5,  camHeight:2   },
-  eagle:   { nameAr:'نسر',   nameEn:'Eagle',   icon:'🦅', eyeH:0.9,  speed:8,  runSpeed:18, diet:'carn', bodyHex:0x3a2810, desc:'ملك الطيور، لا أعداء طبيعيين',          predatedBy:[],                                         camDist:5,  camHeight:2   },
+  deer:    { nameAr:'غزال',   nameEn:'Deer',    icon:'🦌', eyeH:1.0,  speed:7,  runSpeed:14, diet:'herb', bodyHex:0xc8a060, desc:'عاشب سريع، تهرب من المفترسين',        predatedBy:['leopard','lion','tiger'], camDist:5,  camHeight:2.5 },
+  rabbit:  { nameAr:'أرنب',  nameEn:'Rabbit',  icon:'🐇', eyeH:0.35, speed:9,  runSpeed:18, diet:'herb', bodyHex:0xd4c09a, desc:'صغير وسريع جداً، خطر دائم يحدق به',   predatedBy:['leopard','lion','tiger'], camDist:3,  camHeight:1.5 },
   leopard: { nameAr:'فهد',   nameEn:'Leopard', icon:'🐆', eyeH:0.9,  speed:10, runSpeed:19, diet:'carn', bodyHex:0xd4a030, desc:'مفترس أنيق وسريع، يتسلق الصخور',       predatedBy:['lion','tiger'],                           camDist:5,  camHeight:2   },
   tiger:   { nameAr:'نمر',   nameEn:'Tiger',   icon:'🐯', eyeH:1.0,  speed:9,  runSpeed:17, diet:'carn', bodyHex:0xe07830, desc:'مفترس ضخم، قوي وذكي',                   predatedBy:[],                                         camDist:7,  camHeight:2.5 },
   lion:    { nameAr:'أسد',   nameEn:'Lion',    icon:'🦁', eyeH:1.1,  speed:8,  runSpeed:15, diet:'carn', bodyHex:0xd4a855, desc:'ملك الغابة، لا يهاب شيئاً',             predatedBy:[],                                         camDist:7,  camHeight:2.5 },
-  bear:    { nameAr:'دب',    nameEn:'Bear',    icon:'🐻', eyeH:1.5,  speed:6,  runSpeed:12, diet:'omni', bodyHex:0x5a3820, desc:'آكل للكل، قوي وصبور',                   predatedBy:[],                                         camDist:8,  camHeight:3   },
+  human:   { nameAr:'مستكشف', nameEn:'Explorer', icon:'🧑', eyeH:1.65, speed:7, runSpeed:13, diet:'omni', bodyHex:0x32766b, desc:'مستكشف بوشاح أحمر وحقيبة ميدانية', predatedBy:['leopard','lion','tiger'], camDist:5, camHeight:2.5 },
 } as const;
 
 type AnimalKey = keyof typeof ANIMALS;
+const WILDLIFE_KEYS = ['deer', 'rabbit', 'leopard', 'tiger', 'lion'] satisfies readonly AnimalKey[];
 type Gender = 'male' | 'female';
 type GamePhase = 'select' | 'playing' | 'dead' | 'mated';
 type BotRole = 'predator' | 'prey' | 'mate' | 'neutral';
@@ -116,7 +114,52 @@ function makeAnimalMesh(key: AnimalKey, scale = 1.0): THREE.Group {
   const dark  = new THREE.Color(c).multiplyScalar(0.6).getHex();
   const light = new THREE.Color(c).multiplyScalar(1.3).getHex();
 
-  if (key === 'rabbit') {
+  if (key === 'human') {
+    const skin = mat(0xc9825e);
+    const jacket = mat(0x32766b);
+    const pants = mat(0x414a3a);
+    const leather = mat(0x60452f);
+    const scarf = mat(0xc34435);
+
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.78, 0.38), jacket);
+    torso.position.y = 1.18; g.add(torso);
+    const belt = new THREE.Mesh(new THREE.BoxGeometry(0.69, 0.1, 0.4), leather);
+    belt.position.y = 0.78; g.add(belt);
+
+    const backpack = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.52, 0.2), mat(0x9b713f));
+    backpack.position.set(0, 1.28, -0.29); g.add(backpack);
+    const packFlap = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.12, 0.035), mat(0xc29a59));
+    packFlap.position.set(0, 1.53, -0.4); g.add(packFlap);
+
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.23, 10, 8), skin);
+    head.position.set(0, 1.91, 0.02); g.add(head);
+    const hair = new THREE.Mesh(new THREE.SphereGeometry(0.235, 10, 6), mat(0x38251c));
+    hair.scale.set(1, 0.55, 1);
+    hair.position.set(0, 2.04, -0.015); g.add(hair);
+    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.1, 0.16, 8), skin);
+    neck.position.y = 1.67; g.add(neck);
+    const neckScarf = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.12, 0.13, 8), scarf);
+    neckScarf.position.y = 1.67; g.add(neckScarf);
+    const scarfTail = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.36, 0.05), scarf);
+    scarfTail.position.set(0.2, 1.48, 0.18);
+    scarfTail.rotation.z = -0.22; g.add(scarfTail);
+
+    for (const side of [-1, 1]) {
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.027, 6, 5), mat(0x251c17));
+      eye.position.set(side * 0.075, 1.93, 0.23); g.add(eye);
+
+      const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.105, 0.09, 0.62, 7), jacket);
+      arm.position.set(side * 0.43, 1.18, 0.015);
+      arm.rotation.z = side * -0.1; g.add(arm);
+      const hand = new THREE.Mesh(new THREE.SphereGeometry(0.095, 7, 6), skin);
+      hand.position.set(side * 0.49, 0.84, 0.03); g.add(hand);
+
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.115, 0.68, 7), pants);
+      leg.position.set(side * 0.18, 0.43, 0); g.add(leg);
+      const boot = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.18, 0.32), leather);
+      boot.position.set(side * 0.18, 0.12, 0.075); g.add(boot);
+    }
+  } else if (key === 'rabbit') {
     const body = new THREE.Mesh(new THREE.SphereGeometry(0.28,8,6), mat(c));
     body.position.y = 0.28; g.add(body);
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.22,8,6), mat(c));
@@ -129,45 +172,16 @@ function makeAnimalMesh(key: AnimalKey, scale = 1.0): THREE.Group {
       const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.04,0.25,5), mat(dark));
       leg.position.set(sx*0.14,0.08,sz*0.14); g.add(leg);
     }
-  } else if (key === 'giraffe') {
-    const body = new THREE.Mesh(new THREE.BoxGeometry(0.8,0.8,1.4), mat(c));
-    body.position.y = 2.4; g.add(body);
-    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.28,2.4,7), mat(light));
-    neck.position.set(0,3.9,0.4); neck.rotation.x = -0.35; g.add(neck);
-    const head = new THREE.Mesh(new THREE.BoxGeometry(0.35,0.35,0.7), mat(c));
-    head.position.set(0,5.1,0.9); g.add(head);
-    for (const s of [-1,1]) {
-      const h = new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,0.3,5), mat(dark));
-      h.position.set(s*0.12,5.42,0.85); g.add(h);
-    }
-    for (const [sx,sz] of [[-1,1],[1,1],[-1,-1],[1,-1]]) {
-      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.08,2.2,6), mat(dark));
-      leg.position.set(sx*0.3,1.1,sz*0.5); g.add(leg);
-    }
-  } else if (key === 'falcon' || key === 'eagle') {
-    const body = new THREE.Mesh(new THREE.SphereGeometry(0.35,8,6), mat(c));
-    body.scale.set(1,0.8,1.4); body.position.y = 0.38; g.add(body);
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.2,8,6), mat(dark));
-    head.position.set(0,0.7,0.3); g.add(head);
-    const beak = new THREE.Mesh(new THREE.ConeGeometry(0.07,0.22,5), mat(0xffaa00));
-    beak.rotation.x = Math.PI/2; beak.position.set(0,0.68,0.56); g.add(beak);
-    for (const s of [-1,1]) {
-      const wing = new THREE.Mesh(new THREE.BoxGeometry(0.9,0.08,0.45), mat(light));
-      wing.position.set(s*0.8,0.4,0); wing.rotation.z = s*0.25; g.add(wing);
-    }
-    const tail = new THREE.Mesh(new THREE.BoxGeometry(0.3,0.07,0.4), mat(dark));
-    tail.position.set(0,0.35,-0.55); g.add(tail);
   } else {
-    const isBear = key === 'bear';
-    const bW = isBear ? 0.9 : 0.65, bH = isBear ? 0.75 : 0.55, bL = isBear ? 1.1 : 1.0;
-    const bodyY = isBear ? 1.0 : 0.9;
+    const bW = 0.65, bH = 0.55, bL = 1.0;
+    const bodyY = 0.9;
     const body = new THREE.Mesh(new THREE.BoxGeometry(bW,bH,bL), mat(c));
     body.position.y = bodyY; g.add(body);
-    const headS = isBear ? 0.38 : 0.28;
+    const headS = 0.28;
     const head = new THREE.Mesh(new THREE.SphereGeometry(headS,8,6), mat(c));
-    head.position.set(0, bodyY+0.4, 0.55+(isBear?0.1:0)); g.add(head);
+    head.position.set(0, bodyY+0.4, 0.55); g.add(head);
     const snout = new THREE.Mesh(new THREE.BoxGeometry(0.2,0.15,0.22), mat(dark));
-    snout.position.set(0, bodyY+0.3, 0.8+(isBear?0.1:0)); g.add(snout);
+    snout.position.set(0, bodyY+0.3, 0.8); g.add(snout);
     if (key !== 'lion') {
       for (const s of [-1,1]) {
         const ear = new THREE.Mesh(new THREE.ConeGeometry(0.08,0.18,5), mat(dark));
@@ -194,7 +208,7 @@ function makeAnimalMesh(key: AnimalKey, scale = 1.0): THREE.Group {
         stripe.position.set(0, bodyY+0.25-i*0.12, bL*0.4-i*0.22); g.add(stripe);
       }
     }
-    const legH = isBear ? 0.85 : 0.75;
+    const legH = 0.75;
     const legY = bodyY - bH/2 - legH/2 + 0.05;
     for (const [sx,sz] of [[-1,1],[1,1],[-1,-1],[1,-1]] as [number,number][]) {
       const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.07,legH,6), mat(dark));
@@ -474,7 +488,7 @@ export default function BatmosGame() {
       else if (!mateBot && i<3)              { role='mate'; bKey=animal; bGender=mateGender; }
       else if (predatorKeys.length>0 && r<0.4) { role='predator'; bKey=predatorKeys[Math.floor(Math.random()*predatorKeys.length)]; }
       else if (preyKeys.length>0 && r<0.7)     { role='prey';     bKey=preyKeys[Math.floor(Math.random()*preyKeys.length)]; }
-      else                                      { role='neutral';  bKey=(Object.keys(ANIMALS) as AnimalKey[])[Math.floor(Math.random()*9)]; }
+      else                                      { role='neutral';  bKey=WILDLIFE_KEYS[Math.floor(Math.random()*WILDLIFE_KEYS.length)]; }
 
       const bSize = ANIMALS[bKey].speed/8;
       const mesh = makeAnimalMesh(bKey, bSize*0.9+0.1);
@@ -948,7 +962,7 @@ export default function BatmosGame() {
         <div className="overlay select-overlay">
           <div className="select-panel">
             <div className="select-title">🌿 عالم البرية</div>
-            <div className="select-subtitle">اختر حيوانك وابدأ رحلة البقاء</div>
+            <div className="select-subtitle">اختر شخصيتك وابدأ رحلة البقاء</div>
             <div className="animal-grid">
               {(Object.keys(ANIMALS) as AnimalKey[]).map(key => {
                 const a = ANIMALS[key];
