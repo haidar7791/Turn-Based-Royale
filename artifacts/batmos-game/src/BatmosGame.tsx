@@ -29,9 +29,11 @@ type BotState = 'wander' | 'flee' | 'chase' | 'attack' | 'idle';
 const CFG = {
   MAP_SIZE: 400,
   TERRAIN_SEGS: 80,
-  TERRAIN_H: 18,
-  TREE_COUNT: 180,
-  ROCK_COUNT: 40,
+  TERRAIN_BASE: 4.2,
+  TERRAIN_H: 7,
+  TREE_COUNT: 200,
+  ROCK_COUNT: 54,
+  GRASS_PATCH_COUNT: 220,
   FOOD_COUNT: 50,
   WATER_LEVEL: 1.4,
   BOT_COUNT: 14,
@@ -55,7 +57,6 @@ const CFG = {
   QUEST_SURVIVE_SEC: 45,
   JUMP_FORCE: 6,
   GRAVITY: -18,
-  DAY_CYCLE_SECS: 240,
 };
 
 // ══════════════════════════════════════════════════════════
@@ -86,10 +87,10 @@ interface SurvivalState {
 // ══════════════════════════════════════════════════════════
 const noise2D = createNoise2D();
 function terrainH(x: number, z: number): number {
-  return (
-    noise2D(x / 80, z / 80) * 0.55 +
-    noise2D(x / 30, z / 30) * 0.30 +
-    noise2D(x / 10, z / 10) * 0.15
+  return CFG.TERRAIN_BASE + (
+    noise2D(x / 135, z / 135) * 0.52 +
+    noise2D(x / 55, z / 55) * 0.10 +
+    noise2D(x / 24, z / 24) * 0.025
   ) * CFG.TERRAIN_H;
 }
 
@@ -272,10 +273,6 @@ export default function BatmosGame() {
     pointerLocked: boolean;
     mateBot: BotAnimal | null;
     mateMarker: THREE.Group | null;
-    ambient: THREE.AmbientLight;
-    sun: THREE.DirectionalLight;
-    sky: THREE.HemisphereLight;
-    timeOfDay: number;
     compassTimer: number;
   } | null>(null);
 
@@ -312,16 +309,16 @@ export default function BatmosGame() {
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.1;
-    renderer.setClearColor(0x87ceeb);
+    renderer.toneMappingExposure = 1.15;
+    renderer.setClearColor(0x9dd9f7);
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x87ceeb, 0.008);
+    scene.fog = new THREE.FogExp2(0x9dd9f7, 0.004);
 
-    // Lights (saved as refs for day/night)
-    const ambient = new THREE.AmbientLight(0xffeedd, 0.6);
+    // Fixed daylight keeps the landscape bright throughout the session.
+    const ambient = new THREE.AmbientLight(0xfff4df, 0.8);
     scene.add(ambient);
-    const sun = new THREE.DirectionalLight(0xfff5e0, 1.8);
+    const sun = new THREE.DirectionalLight(0xfff5df, 2.0);
     sun.position.set(120, 200, 80);
     sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
@@ -329,7 +326,7 @@ export default function BatmosGame() {
     sun.shadow.camera.left = sun.shadow.camera.bottom = -200;
     sun.shadow.camera.right = sun.shadow.camera.top = 200;
     scene.add(sun);
-    const sky = new THREE.HemisphereLight(0x87ceeb, 0x4a7a3a, 0.5);
+    const sky = new THREE.HemisphereLight(0xb9e4ff, 0x66894a, 0.8);
     scene.add(sky);
 
     const camera = new THREE.PerspectiveCamera(70, canvas.clientWidth / canvas.clientHeight, 0.1, 600);
@@ -343,13 +340,13 @@ export default function BatmosGame() {
       const x = pos.getX(i), z = pos.getZ(i);
       const h = terrainH(x, z);
       pos.setY(i, h);
-      const t2 = Math.max(0, Math.min(1, (h - CFG.TERRAIN_H*0.05) / (CFG.TERRAIN_H*0.85)));
+      const t2 = Math.max(0, (h - (CFG.WATER_LEVEL + 0.35)) / (CFG.TERRAIN_H * 0.58));
       let r, gr, b;
       if (h < CFG.WATER_LEVEL+0.5)  { r=0.76; gr=0.70; b=0.50; }
-      else if (t2 < 0.35)            { r=0.28; gr=0.52; b=0.22; }
-      else if (t2 < 0.65)            { r=0.45; gr=0.40; b=0.30; }
-      else if (t2 < 0.85)            { r=0.55; gr=0.50; b=0.45; }
-      else                           { r=0.92; gr=0.93; b=0.97; }
+      else if (t2 < 0.72)            { r=0.34; gr=0.58; b=0.25; }
+      else if (t2 < 1.05)            { r=0.47; gr=0.53; b=0.31; }
+      else if (t2 < 1.35)            { r=0.58; gr=0.56; b=0.47; }
+      else                           { r=0.86; gr=0.87; b=0.82; }
       colors.push(r, gr, b);
     }
     tGeo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
@@ -392,6 +389,57 @@ export default function BatmosGame() {
       rock.position.set(rx, ry+s*0.4, rz); rock.rotation.set(Math.random(),Math.random(),Math.random());
       rock.castShadow = true; rock.receiveShadow = true; scene.add(rock);
     }
+
+    // ── SPARSE GRASS ──────────────────────────────────
+    const grassGeometry = new THREE.ConeGeometry(0.075, 0.55, 3);
+    grassGeometry.translate(0, 0.275, 0);
+    const grassMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      roughness: 1,
+      side: THREE.DoubleSide,
+    });
+    const grass = new THREE.InstancedMesh(
+      grassGeometry,
+      grassMaterial,
+      CFG.GRASS_PATCH_COUNT * 3,
+    );
+    grass.castShadow = false;
+    grass.receiveShadow = false;
+    const grassColors = [
+      new THREE.Color(0x6f9d45),
+      new THREE.Color(0x83aa4e),
+      new THREE.Color(0x91ad59),
+    ];
+    const grassBlade = new THREE.Object3D();
+    let grassIndex = 0;
+    for (let patch = 0; patch < CFG.GRASS_PATCH_COUNT; patch++) {
+      const gx = (Math.random() - 0.5) * (S - 20);
+      const gz = (Math.random() - 0.5) * (S - 20);
+      const gy = terrainH(gx, gz);
+      if (gy < CFG.WATER_LEVEL + 0.3) continue;
+
+      for (let blade = 0; blade < 3; blade++) {
+        const angle = Math.random() * Math.PI * 2;
+        const offset = 0.12 + Math.random() * 0.08;
+        const bx = gx + Math.cos(angle) * offset;
+        const bz = gz + Math.sin(angle) * offset;
+        grassBlade.position.set(bx, terrainH(bx, bz), bz);
+        grassBlade.rotation.set(
+          (Math.random() - 0.5) * 0.25,
+          angle,
+          (Math.random() - 0.5) * 0.25,
+        );
+        grassBlade.scale.set(0.8 + Math.random() * 0.4, 0.7 + Math.random() * 0.6, 1);
+        grassBlade.updateMatrix();
+        grass.setMatrixAt(grassIndex, grassBlade.matrix);
+        grass.setColorAt(grassIndex, grassColors[Math.floor(Math.random() * grassColors.length)]);
+        grassIndex++;
+      }
+    }
+    grass.count = grassIndex;
+    grass.instanceMatrix.needsUpdate = true;
+    if (grass.instanceColor) grass.instanceColor.needsUpdate = true;
+    scene.add(grass);
 
     // ── FOOD NODES ───────────────────────────────────
     const aDef = ANIMALS[animal];
@@ -485,8 +533,6 @@ export default function BatmosGame() {
       animFrame:0,
       pointerLocked:false,
       mateBot, mateMarker,
-      ambient, sun, sky,
-      timeOfDay:0.5, // start at noon
       compassTimer:0,
     };
 
@@ -622,33 +668,6 @@ export default function BatmosGame() {
       if (t.camera.position.y < camGround + 0.5) t.camera.position.y = camGround + 0.5;
       // Look at animal's body center
       t.camera.lookAt(new THREE.Vector3(t.playerPos.x, feetY2 + aDef2.eyeH * 0.55, t.playerPos.z));
-
-      // ── DAY / NIGHT CYCLE ────────────────────────
-      t.timeOfDay = (t.timeOfDay + dt / CFG.DAY_CYCLE_SECS) % 1;
-      // 0 = midnight, 0.25 = dawn, 0.5 = noon, 0.75 = dusk
-      const sunAngle = (t.timeOfDay - 0.25) * Math.PI * 2; // 0.25 = dawn → PI/2 (sunrise)
-      const sunH = Math.sin(sunAngle); // -1=night, +1=noon
-      t.sun.position.set(Math.cos(sunAngle)*200, Math.max(8, sunH*220), 80);
-      t.sun.intensity = Math.max(0, sunH) * 1.8 + 0.05;
-
-      const dayF = Math.max(0, sunH);            // 0=night → 1=noon
-      const dawnF = Math.max(0, 1 - Math.abs(sunH) * 5); // spike near horizon
-      let skyR, skyG, skyB;
-      if (dayF > 0) {
-        skyR = 0.12 + 0.41 * dayF + 0.55 * dawnF;
-        skyG = 0.15 + 0.66 * dayF + 0.22 * dawnF;
-        skyB = 0.20 + 0.72 * dayF + 0.05 * dawnF;
-      } else {
-        skyR = 0.04; skyG = 0.06; skyB = 0.16;
-      }
-      const skyCol = new THREE.Color(skyR, skyG, skyB);
-      t.renderer.setClearColor(skyCol);
-      (t.scene.fog as THREE.FogExp2).color.copy(skyCol);
-      t.ambient.intensity = 0.08 + dayF * 0.52;
-      t.sky.intensity = 0.06 + dayF * 0.44;
-      // Tint sun/hemisphere color by time of day
-      t.sun.color.setRGB(1, 0.92 + dayF*0.08 - dawnF*0.12, 0.76 + dayF*0.24 - dawnF*0.3);
-      t.sky.color.copy(skyCol);
 
       // ── MATE MARKER ──────────────────────────────
       if (t.mateMarker && t.mateBot && t.mateBot.alive) {

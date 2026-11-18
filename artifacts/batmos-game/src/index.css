@@ -58,7 +58,8 @@ canvas#game-canvas {
    CHARACTER SELECTION SCREEN
 ═══════════════════════════════════════════ */
 .select-overlay {
-  background: radial-gradient(ellipse at 50% 30%, #0a1f0a 0%, #000 100%);
+  background: radial-gradient(ellipse at 50% 30%, #f1f8e8 0%, #dcebd0 58%, #cbdcbb 100%);
+  color: #203a25;
   overflow-y: auto;
   padding: 20px;
 }
@@ -71,12 +72,12 @@ canvas#game-canvas {
 
 .select-title {
   font-size: 3.2rem; font-weight: 900;
-  color: #44ff88;
-  text-shadow: 0 0 40px #44ff88, 0 0 80px rgba(68,255,136,0.3);
+  color: #2d7840;
+  text-shadow: 0 2px 16px rgba(67, 135, 72, 0.22);
   line-height: 1;
 }
 .select-subtitle {
-  font-size: 1.1rem; color: #4a8a5a;
+  font-size: 1.1rem; color: #526d53;
 }
 
 /* Animal grid */
@@ -88,8 +89,8 @@ canvas#game-canvas {
 }
 
 .animal-card {
-  background: rgba(255,255,255,0.04);
-  border: 2px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.72);
+  border: 2px solid rgba(48,86,47,0.16);
   border-radius: 12px;
   padding: 14px 10px 10px;
   cursor: pointer;
@@ -98,48 +99,48 @@ canvas#game-canvas {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
 }
 .animal-card:hover {
-  background: rgba(68,255,136,0.07);
-  border-color: rgba(68,255,136,0.35);
+  background: rgba(255,255,255,0.92);
+  border-color: rgba(62,139,69,0.45);
   transform: translateY(-2px);
 }
 .animal-card.selected {
-  background: rgba(68,255,136,0.14);
-  border-color: #44ff88;
-  box-shadow: 0 0 20px rgba(68,255,136,0.25);
+  background: rgba(191,225,174,0.76);
+  border-color: #5a9c4d;
+  box-shadow: 0 5px 20px rgba(62,119,57,0.18);
 }
 .animal-icon { font-size: 2.4rem; line-height: 1; }
-.animal-name { font-size: 1rem; font-weight: bold; color: #fff; }
-.animal-desc { font-size: 10px; color: #777; line-height: 1.4; }
-.animal-diet { font-size: 10px; color: #44aa66; margin-top: 2px; }
+.animal-name { font-size: 1rem; font-weight: bold; color: #243b28; }
+.animal-desc { font-size: 10px; color: #657265; line-height: 1.4; }
+.animal-diet { font-size: 10px; color: #3e8048; margin-top: 2px; }
 
 /* Gender row */
 .gender-row {
   display: flex; align-items: center; gap: 12px;
   margin-top: 4px;
 }
-.gender-label { font-size: 14px; color: #888; }
+.gender-label { font-size: 14px; color: #536354; }
 .gender-btn {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.2);
-  color: #aaa; font-size: 14px; font-weight: bold;
+  background: rgba(255,255,255,0.68);
+  border: 1px solid rgba(45,83,48,0.2);
+  color: #586859; font-size: 14px; font-weight: bold;
   padding: 8px 22px; border-radius: 8px; cursor: pointer;
   transition: all 0.15s;
 }
-.gender-btn:hover { background: rgba(255,255,255,0.12); color: #fff; }
+.gender-btn:hover { background: rgba(255,255,255,0.94); color: #243b28; }
 .gender-btn.active {
-  background: rgba(68,255,136,0.15);
-  border-color: #44ff88; color: #44ff88;
+  background: #e1f0d8;
+  border-color: #5a9c4d; color: #347340;
 }
 
 /* Preview bar */
 .animal-preview-bar {
   display: flex; gap: 24px; align-items: center;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.7);
+  border: 1px solid rgba(45,83,48,0.15);
   border-radius: 8px; padding: 10px 20px;
-  font-size: 13px; color: #aaa; width: 100%; justify-content: center;
+  font-size: 13px; color: #536354; width: 100%; justify-content: center;
 }
-.animal-preview-bar span { color: #ccc; }
+.animal-preview-bar span { color: #2d4732; }
 
 /* Start button */
 .btn-start {
